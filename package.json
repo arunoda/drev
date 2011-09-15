@@ -1,0 +1,20 @@
+{
+    "name": "drev",
+    "version": "0.0.1",
+    "directories": {
+        "lib": "./lib"
+    },
+    "description": "Distributed Redis EventEmitter",
+    "author": "Arunoda Susiripala <arunoda.susiripala@gmail.com>",
+    "homepage": "https://github.com/arunoda/drev",
+    "dependencies": {
+        "winstoon": ">= 0.1.2beta",
+        "redis": ">= 0.6.7",
+        "qbox": ">= 0.1.3"
+    },
+    "devDependencies": {
+        "horaa": ">= 0.1.1alpha",
+        "nodemock": ">= 0.2.14"
+    },
+    "tags": ["distributed", "redis", "eventemitter", "events", "eventemmitter2", "queue"]
+}
