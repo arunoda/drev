@@ -1,12 +1,16 @@
 var nodemock = require('nodemock');
 var horaa = require('horaa');
 var redis = horaa('redis');
+var redisSimulator = require('../simulators/redis');
 
 exports.testOn = function(test) {
 	
 	var ctrl = {};
 	var sub = nodemock.mock('on').takes('message', function() {}).ctrl(1, ctrl);
 	sub.mock('subscribe').takes('hello');
+	sub.mock('on').takes('connect', function() {}).calls(1).times(2);
+	sub.mock('on').takes('error', function() {}).times(2);
+	sub.ignore('quit');
 
 	redis.hijack('createClient', function() {
 		return sub;
@@ -32,6 +36,9 @@ exports.testOnMultiple = function(test) {
 	var ctrl = {};
 	var sub = nodemock.mock('on').takes('message', function() {}).ctrl(1, ctrl);
 	sub.mock('subscribe').takes('hello');
+	sub.mock('on').takes('connect', function() {}).calls(1).times(2);
+	sub.mock('on').takes('error', function() {}).times(2);
+	sub.ignore('quit');
 
 	redis.hijack('createClient', function() {
 		return sub;
@@ -40,6 +47,7 @@ exports.testOnMultiple = function(test) {
 	var payload = {age: 10};
 
 	var drev = require('drev');
+	drev.stop();
 	drev.start();
 
 	drev.on('hello', function(obj) {
@@ -61,6 +69,9 @@ exports.testOnNotForMe = function(test) {
 	var ctrl = {};
 	var sub = nodemock.mock('on').takes('message', function() {}).ctrl(1, ctrl);
 	sub.mock('subscribe').takes('hello');
+	sub.mock('on').takes('connect', function() {}).calls(1).times(2);
+	sub.mock('on').takes('error', function() {}).times(2);
+	sub.ignore('quit');
 
 	redis.hijack('createClient', function() {
 		return sub;
@@ -69,6 +80,7 @@ exports.testOnNotForMe = function(test) {
 	var payload = {age: 10};
 
 	var drev = require('drev');
+	drev.stop();
 	drev.start();
 
 	drev.on('hello', function(obj) {
@@ -89,6 +101,9 @@ exports.testOnce = function(test) {
 	var ctrl = {};
 	var sub = nodemock.mock('on').takes('message', function() {}).ctrl(1, ctrl);
 	sub.mock('subscribe').takes('hello');
+	sub.mock('on').takes('connect', function() {}).calls(1).times(2);
+	sub.mock('on').takes('error', function() {}).times(2);
+	sub.ignore('quit');
 
 	redis.hijack('createClient', function() {
 		return sub;
@@ -97,6 +112,7 @@ exports.testOnce = function(test) {
 	var payload = {age: 10};
 
 	var drev = require('drev');
+	drev.stop();
 	drev.start();
 	drev.once('hello', function(obj) {
 		test.deepEqual(obj, payload);
@@ -117,6 +133,9 @@ exports.testInvalidPayload = function(test) {
 	var ctrl = {};
 	var sub = nodemock.mock('on').takes('message', function() {}).ctrl(1, ctrl);
 	sub.mock('subscribe').takes('hello');
+	sub.mock('on').takes('connect', function() {}).calls(1).times(2);
+	sub.mock('on').takes('error', function() {}).times(2);
+	sub.ignore('quit');
 
 	redis.hijack('createClient', function() {
 		return sub;
@@ -125,6 +144,7 @@ exports.testInvalidPayload = function(test) {
 	var payload = {age: 10};
 
 	var drev = require('drev');
+	drev.stop();
 	drev.start();
 	drev.once('hello', function(msg) {
 		test.deepEqual(msg, 'error data format');
@@ -144,6 +164,9 @@ exports.testInvalidPayload = function(test) {
 	var ctrl = {};
 	var sub = nodemock.mock('on').takes('message', function() {}).ctrl(1, ctrl);
 	sub.mock('subscribe').takes('hello');
+	sub.mock('on').takes('connect', function() {}).calls(1).times(2);
+	sub.mock('on').takes('error', function() {}).times(2);
+	sub.ignore('quit');
 
 	redis.hijack('createClient', function() {
 		return sub;
@@ -152,6 +175,7 @@ exports.testInvalidPayload = function(test) {
 	var payload = {age: 10};
 
 	var drev = require('drev');
+	drev.stop();
 	drev.start();
 	drev.once('hello', function(msg) {
 		test.deepEqual(msg, 'error data format');
@@ -169,9 +193,15 @@ exports.testEmit = function(test) {
 	test.expect(2);
 
 	var sub = nodemock.mock('on').takes('message', function() {});
+	sub.mock('on').takes('connect', function() {}).calls(1);
+	sub.mock('on').takes('error', function() {});
+	sub.ignore('quit');
 
 	var args = [10, true, {abc: 10}];
 	var pub = nodemock.mock('publish').takes('hello', JSON.stringify(args));
+	pub.mock('on').takes('connect', function() {}).calls(1);
+	pub.mock('on').takes('error', function() {});
+	pub.ignore('quit');
 
 	var cnt = 0;
 	redis.hijack('createClient', function() {
@@ -183,6 +213,7 @@ exports.testEmit = function(test) {
 	});
 
 	var drev = require('drev');
+	drev.stop();
 	drev.start();
 	drev.emit('hello', 10, true, {abc: 10});
 
@@ -199,6 +230,9 @@ exports.testRemoveAllListeners = function(test) {
 	var sub = nodemock.mock('on').takes('message', function() {}).ctrl(1, ctrl);
 	sub.mock('subscribe').takes('hello');
 	sub.mock('unsubscribe').takes('hello');
+	sub.mock('on').takes('connect', function() {}).calls(1).times(2);
+	sub.mock('on').takes('error', function() {}).times(2);
+	sub.ignore('quit');
 
 	redis.hijack('createClient', function() {
 		return sub;
@@ -207,6 +241,7 @@ exports.testRemoveAllListeners = function(test) {
 	var payload = {age: 10};
 
 	var drev = require('drev');
+	drev.stop();
 	drev.start();
 	drev.on('hello', function(obj) {
 		test.fail();
@@ -226,6 +261,9 @@ exports.testRemoveListener = function(test) {
 	var ctrl = {};
 	var sub = nodemock.mock('on').takes('message', function() {}).ctrl(1, ctrl);
 	sub.mock('subscribe').takes('hello');
+	sub.mock('on').takes('connect', function() {}).calls(1).times(2);
+	sub.mock('on').takes('error', function() {}).times(2);
+	sub.ignore('quit');
 
 	redis.hijack('createClient', function() {
 		return sub;
@@ -234,6 +272,7 @@ exports.testRemoveListener = function(test) {
 	var payload = {age: 10};
 
 	var drev = require('drev');
+	drev.stop();
 	drev.start();
 
 	function listener(obj) {
@@ -254,10 +293,12 @@ exports.testRemoveListener = function(test) {
 
 exports.testMaxListeners = function(test) {
 	
-	test.expect(5);
 	var ctrl = {};
 	var sub = nodemock.mock('on').takes('message', function() {}).ctrl(1, ctrl);
 	sub.mock('subscribe').takes('hello');
+	sub.mock('on').takes('connect', function() {}).calls(1).times(2);
+	sub.mock('on').takes('error', function() {}).times(2);
+	sub.ignore('quit');
 
 	redis.hijack('createClient', function() {
 		return sub;
@@ -266,6 +307,7 @@ exports.testMaxListeners = function(test) {
 	var payload = {age: 10};
 
 	var drev = require('drev');
+	drev.stop();
 	drev.start();
 	drev.setMaxListeners(10);
 	drev.on('hello', function(obj) {
@@ -278,7 +320,7 @@ exports.testMaxListeners = function(test) {
 		test.deepEqual(obj, payload);
 	});
 
-	test.equal(drev.listeners('hello').length, 3);	
+	drev.listeners('hello')	
 
 
 	ctrl.trigger('hello', JSON.stringify(payload));
@@ -287,3 +329,36 @@ exports.testMaxListeners = function(test) {
 	test.done();
 }
 
+exports.testReconnect = function(test) {
+	
+	test.expect(2);
+	var simulator = redisSimulator.load();
+	var pub = simulator.createClient();
+	var sub = simulator.createClient();
+
+	var cnt = 0;
+	redis.hijack('createClient', function() {
+		if(cnt++ == 0) {
+			return pub;
+		} else {
+			return sub;
+		}
+	});
+
+	var drev = require('drev');
+	drev.stop();
+	drev.start();
+
+	drev.on('hello', function(msg) {
+		test.ok(true);
+	})
+	drev.emit('hello', 'hi dude');
+
+	simulator.poweroff();
+	simulator.poweron();
+	drev.emit('hello', 'hi dude');
+	
+	setTimeout(function() {
+		test.done();
+	}, 100);
+};
