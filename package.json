@@ -1,9 +1,10 @@
 {
     "name": "drev",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "directories": {
         "lib": "./lib"
     },
+    "main": "./lib/drev",
     "description": "Distributed Redis EventEmitter",
     "author": "Arunoda Susiripala <arunoda.susiripala@gmail.com>",
     "homepage": "https://github.com/arunoda/drev",
