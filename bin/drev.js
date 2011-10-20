@@ -14,8 +14,9 @@ function hijackForPrinting(method) {
 		
 		if(!callback) {
 			//setting the callback
+			var sender = this.sender;
 			callback = function() {
-				console.log('event from channel: %s', channel);
+				console.log('event from channel: %s by: %s', channel, this.sender);
 				for(var index in arguments) {
 					console.log('\t%s - %s', parseInt(index) + 1, JSON.stringify(arguments[index]));
 				}
