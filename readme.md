@@ -7,7 +7,7 @@ As the name implied DREV is an port of EventEmmiter (which is available of NodeJ
 * Platforms
 * Operating Systems
 
-<h3 style='color: red'>Now You can use `drev` as a work queue too<h3>
+<h3>***** Now You can use `drev` as a work queue too. (See for API below)  ***** </h3>
 
 Wow - What's the Magic
 ----------------------
