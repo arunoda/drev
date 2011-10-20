@@ -2,6 +2,7 @@ var nodemock = require('nodemock');
 var horaa = require('horaa');
 var redis = horaa('redis');
 var redisSimulator = require('../simulators/redis');
+var Channel = require('channel');
 
 exports.testOn = function(test) {
 	
@@ -16,15 +17,18 @@ exports.testOn = function(test) {
 		return sub;
 	});
 
-	var payload = {age: 10};
+	var data = {age: 10};
 
 	var drev = require('drev');
 	drev.start();
 	drev.on('hello', function(obj) {
-		test.deepEqual(obj, payload);
+		test.deepEqual(obj, data);
 	});
 
-	ctrl.trigger('hello', JSON.stringify(payload));
+	var c = new Channel();
+	c.setArgs([data]);
+
+	ctrl.trigger('hello', c.encode());
 	test.ok(sub.assert());
 	redis.restore('createClient');
 	test.done();
@@ -54,9 +58,12 @@ exports.testOnMultiple = function(test) {
 		test.deepEqual(obj, payload);
 	});
 
-	ctrl.trigger('hello', JSON.stringify(payload));
-	ctrl.trigger('hello', JSON.stringify(payload));
-	ctrl.trigger('hello', JSON.stringify(payload));
+	var c = new Channel();
+	c.setArgs([payload]);
+
+	ctrl.trigger('hello', c.encode());
+	ctrl.trigger('hello', c.encode());
+	ctrl.trigger('hello', c.encode());
 
 	test.ok(sub.assert());
 	redis.restore('createClient');
@@ -87,7 +94,9 @@ exports.testOnNotForMe = function(test) {
 		test.fail();
 	});
 
-	ctrl.trigger('hello2', JSON.stringify(payload));
+	var c = new Channel();
+	c.setArgs([payload]);
+	ctrl.trigger('hello2', c.encode());
 
 	test.ok(sub.assert());
 	redis.restore('createClient');
@@ -118,9 +127,12 @@ exports.testOnce = function(test) {
 		test.deepEqual(obj, payload);
 	});
 
-	ctrl.trigger('hello', JSON.stringify(payload));
-	ctrl.trigger('hello', JSON.stringify(payload));
-	ctrl.trigger('hello', JSON.stringify(payload));
+	var c = new Channel();
+	c.setArgs([payload]);	
+
+	ctrl.trigger('hello', c.encode());
+	ctrl.trigger('hello', c.encode());
+	ctrl.trigger('hello', c.encode());
 	test.ok(sub.assert());
 	redis.restore('createClient');
 	test.done();
@@ -128,7 +140,7 @@ exports.testOnce = function(test) {
 
 exports.testInvalidPayload = function(test) {
 	
-	test.expect(2);
+	test.expect(1);
 
 	var ctrl = {};
 	var sub = nodemock.mock('on').takes('message', function() {}).ctrl(1, ctrl);
@@ -147,46 +159,15 @@ exports.testInvalidPayload = function(test) {
 	drev.stop();
 	drev.start();
 	drev.once('hello', function(msg) {
-		test.deepEqual(msg, 'error data format');
+		test.fail('should not called because of the invalid data');
 	});
 
 	ctrl.trigger('hello', "{sdsd ;sds");
-	ctrl.trigger('hello', JSON.stringify(payload));
 	test.ok(sub.assert());
 	redis.restore('createClient');
 	test.done();
 }
 
-exports.testInvalidPayload = function(test) {
-	
-	test.expect(2);
-
-	var ctrl = {};
-	var sub = nodemock.mock('on').takes('message', function() {}).ctrl(1, ctrl);
-	sub.mock('subscribe').takes('hello');
-	sub.mock('on').takes('connect', function() {}).calls(1).times(2);
-	sub.mock('on').takes('error', function() {}).times(2);
-	sub.ignore('quit');
-
-	redis.hijack('createClient', function() {
-		return sub;
-	});
-
-	var payload = {age: 10};
-
-	var drev = require('drev');
-	drev.stop();
-	drev.start();
-	drev.once('hello', function(msg) {
-		test.deepEqual(msg, 'error data format');
-	});
-
-	ctrl.trigger('hello', "{sdsd ;sds");
-	ctrl.trigger('hello', JSON.stringify(payload));
-	test.ok(sub.assert());
-	redis.restore('createClient');
-	test.done();
-}
 
 exports.testEmit = function(test) {
 	
@@ -198,7 +179,10 @@ exports.testEmit = function(test) {
 	sub.ignore('quit');
 
 	var args = [10, true, {abc: 10}];
-	var pub = nodemock.mock('publish').takes('hello', JSON.stringify(args));
+	var c = new Channel();
+	c.setArgs(args);
+
+	var pub = nodemock.mock('publish').takes('hello', c.encode());
 	pub.mock('on').takes('connect', function() {}).calls(1);
 	pub.mock('on').takes('error', function() {});
 	pub.ignore('quit');
@@ -248,7 +232,10 @@ exports.testRemoveAllListeners = function(test) {
 	});
 	drev.removeAllListeners('hello');
 
-	ctrl.trigger('hello', JSON.stringify(payload));
+	var c = new Channel();
+	c.setArgs([payload]);
+
+	ctrl.trigger('hello', c.encode());
 	test.ok(sub.assert());
 	redis.restore('createClient');
 	test.done();
@@ -285,7 +272,10 @@ exports.testRemoveListener = function(test) {
 	});
 	drev.removeListener('hello', listener);
 
-	ctrl.trigger('hello', JSON.stringify(payload));
+	var c = new Channel();
+	c.setArgs([payload]);
+
+	ctrl.trigger('hello', c.encode());
 	test.ok(sub.assert());
 	redis.restore('createClient');
 	test.done();
@@ -322,8 +312,10 @@ exports.testMaxListeners = function(test) {
 
 	drev.listeners('hello')	
 
+	var c = new Channel();
+	c.setArgs([payload]);
 
-	ctrl.trigger('hello', JSON.stringify(payload));
+	ctrl.trigger('hello', c.encode());
 	test.ok(sub.assert());
 	redis.restore('createClient');
 	test.done();
@@ -361,4 +353,28 @@ exports.testReconnect = function(test) {
 	setTimeout(function() {
 		test.done();
 	}, 100);
+};
+
+exports.testMe = function(test) {
+	var simulator = redisSimulator.load();
+	var pub = simulator.createClient();
+	var sub = simulator.createClient();
+
+	var cnt = 0;
+	redis.hijack('createClient', function() {
+		if(cnt++ == 0) {
+			return pub;
+		} else {
+			return sub;
+		}
+	});
+
+	var drev = require('drev');
+	drev.stop();
+	drev.start();
+
+	test.equal(drev.me('arunoda'), undefined);
+	test.equal(drev.me(), 'arunoda');
+
+	test.done();
 };

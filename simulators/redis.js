@@ -67,6 +67,8 @@ function Client(eventBus) {
 			self.emit('error');
 		}, 10);
 	};
+
+	this.quit = function() {};
 	
 }
 
