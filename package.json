@@ -12,7 +12,8 @@
         "winstoon": ">= 0.1.2beta",
         "redis": ">= 0.6.7",
         "qbox": ">= 0.1.6",
-        "colors": ">= 0.5.0"
+        "colors": ">= 0.5.0",
+        "eventemitter2": ">= 0.4.1"
     },
     "devDependencies": {
         "horaa": ">= 0.1.1alpha",

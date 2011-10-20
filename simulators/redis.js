@@ -15,7 +15,7 @@ function Redis() {
 
 		setTimeout(function() {
 			client.emit('connect');
-		}, 0);
+		}, 10);
 		return client;
 	};
 
@@ -29,7 +29,7 @@ function Redis() {
 		clients.forEach(function(client) {
 			setTimeout(function() {
 				client.emit('connect');
-			}, 10);
+			}, 20);
 		});
 	};
 }

@@ -375,6 +375,39 @@ exports.testMe = function(test) {
 
 	test.equal(drev.me('arunoda'), undefined);
 	test.equal(drev.me(), 'arunoda');
-
+	simulator.poweroff();
 	test.done();
 };
+
+exports.testSender = function(test) {
+	
+	test.expect(2);
+
+	var simulator = redisSimulator.load();
+
+	redis.hijack('createClient', function() {
+		return simulator.createClient();
+	});
+
+	var Drev = require('drev').Drev;
+
+	var c1 = new Drev();
+	var c2 = new Drev();
+	var c3 = new Drev();
+
+	c1.start();
+	c2.start();
+
+	c1.on('hello', function(m) {
+		test.equal(m, 'hi');
+		test.equal(this.sender, 'c2');
+	});
+
+	c2.me('c2');
+	c2.emit('hello', 'hi');
+
+	setTimeout(function() {
+		test.done();
+	}, 100);
+};
+
