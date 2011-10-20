@@ -7,6 +7,7 @@ var redis = require('redis');
 
 hijackForPrinting('on');
 hijackForPrinting('once');
+hijackForWork();
 
 function hijackForPrinting(method) {
 	var oldMethod = drev[method];
@@ -14,7 +15,6 @@ function hijackForPrinting(method) {
 		
 		if(!callback) {
 			//setting the callback
-			var sender = this.sender;
 			callback = function() {
 				console.log('event from channel: %s by: %s', channel, this.sender);
 				for(var index in arguments) {
@@ -24,6 +24,25 @@ function hijackForPrinting(method) {
 		}
 
 		oldMethod.apply(drev, [channel, callback]);
+	}; 
+}
+
+function hijackForWork() {
+	var method = 'work';
+	var oldMethod = drev[method];
+	drev[method] = function(task, callback) {
+		
+		if(!callback) {
+			//setting the callback
+			callback = function() {
+				console.log('doing work of task: %s commanded by: %s', task, this.sender);
+				for(var index in arguments) {
+					console.log('\t%s - %s', parseInt(index) + 1, JSON.stringify(arguments[index]));
+				}
+			}
+		}
+
+		oldMethod.apply(drev, [task, callback]);
 	}; 
 }
 

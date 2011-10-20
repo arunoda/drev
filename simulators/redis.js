@@ -7,10 +7,13 @@ exports.load = function() {
 
 function Redis() {
 	
+	var lists = {};
+	var blpopCallbacks = {};
 	var eventBus = new EventEmitter();
 	var clients = [];
 	this.createClient = function() {
-		var client = new Client(eventBus);
+
+		var client = new Client(eventBus, lists, blpopCallbacks);
 		clients.push(client);
 
 		setTimeout(function() {
@@ -34,7 +37,7 @@ function Redis() {
 	};
 }
 
-function Client(eventBus) {
+function Client(eventBus, lists, blpopCallbacks) {
 	
 	var subscriptions = {};
 	var self = this;
@@ -66,6 +69,34 @@ function Client(eventBus) {
 		setTimeout(function() {
 			self.emit('error');
 		}, 10);
+	};
+
+	this.blpop = function(task, waitTime, callback) {
+
+		if(lists[task] && lists[task].length > 0) {
+			var pickValue = lists[task].shift();
+			setTimeout(function() {
+				callback(null, [task, pickValue]);
+			}, 0);
+		} else {
+			
+			if(!blpopCallbacks[task]) blpopCallbacks[task] = [];
+			blpopCallbacks[task].push(callback);
+		}
+	};
+
+	this.rpush = function(task, message) {
+
+		if(blpopCallbacks[task] && blpopCallbacks[task].length >0) {
+			var pick = blpopCallbacks[task].shift();
+			setTimeout(function() {
+				pick(null, [task, message]);
+			}, 0);
+		} else {
+			if(!lists[task]) lists[task] = [];
+
+			lists[task].push(message);
+		}
 	};
 
 	this.quit = function() {};

@@ -301,6 +301,104 @@ exports.testSender = function(test) {
 
 	setTimeout(function() {
 		test.done();
-	}, 100);
+	}, 20);
+};
+
+exports.testDoWork = function(test) {
+	
+	test.expect(6);
+	var simulator = redisSimulator.load();
+
+	redis.hijack('createClient', function() {
+		return simulator.createClient();
+	});
+
+	var drev = new Drev();
+	drev.start();
+	drev.work('run', function(speed, length) {
+		test.equal(this.sender, 'arunoda');
+		test.equal(speed, 100);
+		test.equal(length, '10km');
+	});
+
+	drev.me('arunoda');
+	drev.do('run', 100, '10km');
+	drev.do('run', 100, '10km');
+
+	setTimeout(function() {
+		test.done();
+	}, 20);
+
+};
+
+exports.testDoWorkReconnect = function(test) {
+	
+	test.expect(6);
+	var simulator = redisSimulator.load();
+
+	redis.hijack('createClient', function() {
+		return simulator.createClient();
+	});
+
+	var drev = new Drev();
+	drev.start();
+	drev.work('run', function(speed, length) {
+		test.equal(this.sender, 'arunoda');
+		test.equal(speed, 100);
+		test.equal(length, '10km');
+	});
+
+	simulator.poweroff();
+	simulator.poweron();
+
+	setTimeout(function() {
+		drev.me('arunoda');
+		drev.do('run', 100, '10km');
+		drev.do('run', 100, '10km');
+	}, 15)
+
+	setTimeout(function() {
+		test.done();
+	}, 30);
+
+};
+
+exports.testDoWorkMultipleWorkers = function(test) {
+	
+	var simulator = redisSimulator.load();
+
+	redis.hijack('createClient', function() {
+		return simulator.createClient();
+	});
+
+	var c1 = new Drev();
+	var c2 = new Drev();
+	var c3 = new Drev();
+	c1.start();
+	c2.start();
+	c3.start();
+
+	var c1Ran = false;
+	var c2Ran = false;
+	c1.work('run', function(speed, length) {
+
+		c1Ran = true;
+	});
+
+	c2.work('run', function(speed, length) {
+
+		c2Ran = true;
+	});
+
+	c3.me('arunoda');
+	c3.do('run', 100, '10km');
+	c3.do('run', 100, '10km');
+
+	setTimeout(function() {
+		test.ok(c1Ran);
+		test.ok(c2Ran);
+		test.done();
+	}, 40);
+
 };
 
