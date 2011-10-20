@@ -7,13 +7,15 @@ As the name implied DREV is an port of EventEmmiter (which is available of NodeJ
 * Platforms
 * Operating Systems
 
+<h3 style='color: red'>Now You can use `drev` as a work queue too<h3>
+
 Wow - What's the Magic
 ----------------------
 No there is no magic. Drev is backed by Redis and simplifies it's pub/sub facility. DREV is very compact and it's about ~100 lines of code.
 
 Motivation
 ----------
-Hook.io - Yes this is a clone of core feature of the hookio but In a different point of look at the same problem :)
+Hook.io - But It's not a hook.io clone. But a better redis client
 
 What we can do
 --------------
@@ -28,7 +30,7 @@ All these applications are independent and loosly coupled. Since DREV is distrib
 Installation
 ------------
 
-	npm install drev
+	sudo npm install drev -g
 
 Dependancy
 ----------
@@ -80,9 +82,49 @@ Cool. We've a REPL tooo. type `drev` in your terminal and start few more and pla
 
 Oh! wait. API?
 --------------
+
+### EventEmitter
+
 Since this is EventEmitter. You can always refer official NodeJS docs (http://nodejs.org/docs/v0.4.11/api/events.html)
 And make sure you start the drev by `drev start()`.
 Happy hacking :)
+
+### Work Queue
+
+Drev Work Queue equally balanced Work Queue and can be worked across processes
+
+#### work
+allow to define an task and it's functionality
+eg:-
+
+	drev.work('taskName', function(p1, p2) {
+		//do the action
+	});
+
+#### do
+commading to to an task
+eg:-
+
+	drev.do('taskName', 'p1', 'p2');
+
+### Named Drevs
+You can define a name for an drev process which help others to identify the sender
+
+#### me
+set the name for the drev
+	
+	drev.me('arunoda');
+
+#### using it
+
+	drev.once('event', function() {
+		var sender = this.sender; //if the emitter of this event idenfied himself
+	});
+
+	drev.work('task', function() {
+		var sender = this.sender; //if the emitter of this event idenfied himself
+	});
+
 
 Distributed! How?
 ----------------
