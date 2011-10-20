@@ -40,15 +40,15 @@ function Client(eventBus) {
 	var self = this;
 
 	this.subscribe = function(event) {
-		subscriptions[event] = subscriptions;
+		
 		var subs = function(message) {
 			self.emit('message', event, message)
 		};
+		subscriptions[event] = subs;
 		eventBus.on(event, subs);
 	};
 
 	this.unsubscribe = function(event) {
-		
 		var callback = subscriptions[event];
 		if(callback) {
 			eventBus.removeListener(event, callback);
