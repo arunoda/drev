@@ -25,7 +25,7 @@ exports.testOn = function(test) {
 	drev.emit('hello', data);
 	setTimeout(function() {
 		test.done();
-	}, 10);
+	}, 100);
 }
 
 exports.testOnMultiple = function(test) {
@@ -218,20 +218,20 @@ exports.testReconnect = function(test) {
 	
 	test.expect(2);
 	var simulator = redisSimulator.load();
-	var pub = simulator.createClient();
+
 	var sub = simulator.createClient();
+	var pub = simulator.createClient();
 
 	var cnt = 0;
 	redis.hijack('createClient', function() {
 		if(cnt++ == 0) {
-			return pub;
-		} else {
 			return sub;
+		} else {
+			return pub;
 		}
 	});
 
-	var drev = require('drev');
-	drev.stop();
+	var drev = new Drev();
 	drev.start();
 
 	drev.on('hello', function(msg) {
