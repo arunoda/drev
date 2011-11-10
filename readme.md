@@ -132,5 +132,5 @@ As I said you. This is redis based :) By default it works with default configura
 
 * Install start redis server in one of your server
 * Start drev in your application saying information about the Redis.
-	`drev.start(redisPort, redisHost)`
+	`drev.start(redisHost, redisPort)`
 * Feel free and play distributely
